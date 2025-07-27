@@ -66,7 +66,7 @@
 
   <!-- Footer -->
   <footer class="bg-gray-200 text-gray-600 py-6 text-center text-sm">
-    &copy; 2025 School Voting System. All rights reserved.
+    &copy; 
   </footer>
 
   <script>

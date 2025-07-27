@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-// Example check for admin login (customize as needed)
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: admin_login.php");
-    exit();
-}
-
 $adminName = $_SESSION['admin_name'] ?? 'Admin';
 ?>
 
