@@ -31,55 +31,55 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
 
 <!-- Main Section -->
 <main class="max-w-6xl mx-auto pt-24 pb-10 px-4">
-  <h2 class="text-2xl font-semibold text-gray-800 mb-8">Manage the Voting System</h2>
+  <h2 class="text-3xl font-semibold text-gray-800 mb-10">Manage the Voting System</h2>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-    <a href="elections.php" class="block bg-white shadow rounded-2xl p-6 hover:bg-blue-50 transition">
-      <div class="flex items-center space-x-4">
-        <i data-lucide="calendar" class="w-8 h-8 text-blue-600"></i>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+    <a href="elections.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+      <div class="flex items-center space-x-5">
+        <i data-lucide="calendar" class="w-10 h-10 text-blue-600"></i>
         <div>
-          <h3 class="text-lg font-semibold">Elections</h3>
-          <p class="text-sm text-gray-500">Create and manage elections</p>
+          <h3 class="text-xl font-semibold">Elections</h3>
+          <p class="text-base text-gray-500">Create and manage elections</p>
         </div>
       </div>
     </a>
 
-    <a href="candidates.php" class="block bg-white shadow rounded-2xl p-6 hover:bg-blue-50 transition">
-      <div class="flex items-center space-x-4">
-        <i data-lucide="users" class="w-8 h-8 text-green-600"></i>
+    <a href="candidates.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+      <div class="flex items-center space-x-5">
+        <i data-lucide="users" class="w-10 h-10 text-green-600"></i>
         <div>
-          <h3 class="text-lg font-semibold">Candidates</h3>
-          <p class="text-sm text-gray-500">Add and organize candidates</p>
+          <h3 class="text-xl font-semibold">Candidates</h3>
+          <p class="text-base text-gray-500">Add and organize candidates</p>
         </div>
       </div>
     </a>
 
-    <a href="voters.php" class="block bg-white shadow rounded-2xl p-6 hover:bg-blue-50 transition">
-      <div class="flex items-center space-x-4">
-        <i data-lucide="user-check" class="w-8 h-8 text-purple-600"></i>
+    <a href="voters.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+      <div class="flex items-center space-x-5">
+        <i data-lucide="user-check" class="w-10 h-10 text-purple-600"></i>
         <div>
-          <h3 class="text-lg font-semibold">Voters</h3>
-          <p class="text-sm text-gray-500">Manage student access</p>
+          <h3 class="text-xl font-semibold">Voters</h3>
+          <p class="text-base text-gray-500">Manage student access</p>
         </div>
       </div>
     </a>
 
-    <a href="results.php" class="block bg-white shadow rounded-2xl p-6 hover:bg-blue-50 transition">
-      <div class="flex items-center space-x-4">
-        <i data-lucide="bar-chart-3" class="w-8 h-8 text-yellow-600"></i>
+    <a href="results.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+      <div class="flex items-center space-x-5">
+        <i data-lucide="bar-chart-3" class="w-10 h-10 text-yellow-600"></i>
         <div>
-          <h3 class="text-lg font-semibold">Results</h3>
-          <p class="text-sm text-gray-500">View election results</p>
+          <h3 class="text-xl font-semibold">Results</h3>
+          <p class="text-base text-gray-500">View election results</p>
         </div>
       </div>
     </a>
 
-    <a href="settings.php" class="block bg-white shadow rounded-2xl p-6 hover:bg-blue-50 transition">
-      <div class="flex items-center space-x-4">
-        <i data-lucide="settings" class="w-8 h-8 text-gray-700"></i>
+    <a href="settings.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+      <div class="flex items-center space-x-5">
+        <i data-lucide="settings" class="w-10 h-10 text-gray-700"></i>
         <div>
-          <h3 class="text-lg font-semibold">Settings</h3>
-          <p class="text-sm text-gray-500">Change system configuration</p>
+          <h3 class="text-xl font-semibold">Settings</h3>
+          <p class="text-base text-gray-500">Change system configuration</p>
         </div>
       </div>
     </a>

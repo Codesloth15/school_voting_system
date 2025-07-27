@@ -123,6 +123,7 @@ while ($row = $candidatesResult->fetch_assoc()) {
                      required>
               <div class="flex flex-col items-center peer-checked:border-blue-700 peer-checked:ring-2 peer-checked:ring-blue-500 p-2 rounded-xl">
                 <img src="<?= htmlspecialchars($candidate['photo_url']) ?>"
+                     onerror="this.src='default.png';"
                      alt="Candidate Photo"
                      class="w-24 h-24 object-cover rounded-full border mb-2">
                 <h4 class="text-lg font-semibold text-center text-gray-800"><?= htmlspecialchars($candidate['full_name']) ?></h4>
