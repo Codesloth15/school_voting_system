@@ -10,8 +10,8 @@ if ($id <= 0) die("Invalid Election ID.");
 
 // Update election
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_election'])) {
-    $stmt = $conn->prepare("UPDATE elections SET title=?, description=?, course=?, start_date=?, end_date=?, status=? WHERE id=?");
-    $stmt->bind_param("ssssssi", $_POST['title'], $_POST['description'], $_POST['course'], $_POST['start_date'], $_POST['end_date'], $_POST['status'], $id);
+    $stmt = $conn->prepare("UPDATE elections SET title=?, description=?, course=?, start_date=?, end_date=?, status=?, college_id=? WHERE id=?");
+    $stmt->bind_param("ssssssii", $_POST['title'], $_POST['description'], $_POST['course'], $_POST['start_date'], $_POST['end_date'], $_POST['status'], $_POST['college'], $id);
     $stmt->execute();
     $stmt->close();
 
@@ -64,25 +64,37 @@ if (isset($_POST['delete_position_confirm'])) {
     exit;
 }
 
-// Fetch election and positions
+// Fetch election
 $stmt = $conn->prepare("SELECT * FROM elections WHERE id=?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $election = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+// Fetch positions
 $stmt = $conn->prepare("SELECT * FROM election_positions WHERE election_id=? ORDER BY id ASC");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $positions = $stmt->get_result();
 
-// Fetch dynamic course list from colleges
-$courses = [];
+// Fetch colleges
 $collegeResult = $conn->query("SELECT id, name FROM colleges ORDER BY name ASC");
-if ($collegeResult && $collegeResult->num_rows > 0) {
-    while ($row = $collegeResult->fetch_assoc()) {
-        $courses[] = $row['name'];
+$colleges = [];
+while ($row = $collegeResult->fetch_assoc()) {
+    $colleges[] = $row;
+}
+
+// Fetch initial courses if college_id exists
+$initialCourses = [];
+if (!empty($election['college_id'])) {
+    $stmt = $conn->prepare("SELECT id, name FROM courses WHERE college_id=?");
+    $stmt->bind_param("i", $election['college_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($courseRow = $result->fetch_assoc()) {
+        $initialCourses[] = $courseRow;
     }
+    $stmt->close();
 }
 ?>
 
@@ -123,16 +135,30 @@ if ($collegeResult && $collegeResult->num_rows > 0) {
       <input type="hidden" name="update_election" value="1">
       <input name="title" value="<?= htmlspecialchars($election['title']) ?>" class="w-full border px-3 py-2 rounded" placeholder="Title" required>
       <textarea name="description" class="w-full border px-3 py-2 rounded" rows="3" placeholder="Description"><?= htmlspecialchars($election['description']) ?></textarea>
-      <select name="course" class="w-full border px-3 py-2 rounded" required>
-        <option value="">-- Select Course --</option>
-        <?php foreach ($courses as $course): ?>
-          <option value="<?= htmlspecialchars($course) ?>" <?= $election['course'] === $course ? 'selected' : '' ?>><?= htmlspecialchars($course) ?></option>
+      
+      <select name="college" id="collegeDropdown" class="w-full border px-3 py-2 rounded" required>
+        <option value="">-- Select College --</option>
+        <?php foreach ($colleges as $college): ?>
+          <option value="<?= $college['id'] ?>" <?= ($election['college_id'] ?? '') == $college['id'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($college['name']) ?>
+          </option>
         <?php endforeach; ?>
       </select>
+
+      <select name="course" id="courseDropdown" class="w-full border px-3 py-2 rounded" required>
+        <option value="">-- Select Course --</option>
+        <?php foreach ($initialCourses as $course): ?>
+          <option value="<?= htmlspecialchars($course['name']) ?>" <?= $election['course'] === $course['name'] ? 'selected' : '' ?>>
+            <?= htmlspecialchars($course['name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+
       <div class="grid grid-cols-2 gap-4">
         <input type="date" name="start_date" value="<?= $election['start_date'] ?>" class="border px-3 py-2 rounded" required>
         <input type="date" name="end_date" value="<?= $election['end_date'] ?>" class="border px-3 py-2 rounded" required>
       </div>
+
       <select name="status" class="w-full border px-3 py-2 rounded" required>
         <option value="active" <?= $election['status'] === 'active' ? 'selected' : '' ?>>Active</option>
         <option value="inactive" <?= $election['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
@@ -156,7 +182,6 @@ if ($collegeResult && $collegeResult->num_rows > 0) {
           <button type="button" onclick="openDeleteModal(<?= $pos['id'] ?>)" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
         </form>
       <?php endwhile; ?>
-
       <div class="flex justify-between items-center pt-4">
         <a href="elections.php" class="text-blue-600 hover:underline text-sm">← Back</a>
       </div>
@@ -164,7 +189,7 @@ if ($collegeResult && $collegeResult->num_rows > 0) {
   </div>
 </main>
 
-<!-- Add Modal -->
+<!-- Modals -->
 <dialog id="addModal" class="rounded-lg p-6 w-96 bg-white shadow-xl">
   <form method="POST" class="space-y-4">
     <h3 class="text-lg font-semibold">Add New Position</h3>
@@ -177,7 +202,6 @@ if ($collegeResult && $collegeResult->num_rows > 0) {
   </form>
 </dialog>
 
-<!-- Delete Modal -->
 <dialog id="deleteModal" class="rounded-lg p-6 w-96 bg-white shadow-xl">
   <form method="POST">
     <input type="hidden" name="delete_position_confirm" id="delete_position_id">
@@ -190,10 +214,30 @@ if ($collegeResult && $collegeResult->num_rows > 0) {
 </dialog>
 
 <script>
-  function openDeleteModal(id) {
-    document.getElementById('delete_position_id').value = id;
-    deleteModal.showModal();
-  }
+function openDeleteModal(id) {
+  document.getElementById('delete_position_id').value = id;
+  deleteModal.showModal();
+}
+
+// Dynamically load courses based on selected college
+document.getElementById('collegeDropdown').addEventListener('change', function () {
+  const collegeId = this.value;
+  const courseDropdown = document.getElementById('courseDropdown');
+  courseDropdown.innerHTML = '<option value="">Loading...</option>';
+
+  fetch('get_courses_by_college.php?college_id=' + collegeId)
+    .then(res => res.json())
+    .then(data => {
+      let options = '<option value="">-- Select Course --</option>';
+      data.forEach(course => {
+        options += `<option value="${course.name}">${course.name}</option>`;
+      });
+      courseDropdown.innerHTML = options;
+    })
+    .catch(() => {
+      courseDropdown.innerHTML = '<option value="">-- Failed to load courses --</option>';
+    });
+});
 </script>
 
 </body>

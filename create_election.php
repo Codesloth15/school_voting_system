@@ -27,42 +27,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $officerCounts = $_POST['officer_counts'] ?? [];
     $collegeId = intval($_POST['college_id'] ?? 0);
 
-    if ($title && $start_date && $end_date && $course && $collegeId > 0 && !empty($positions)) {
-        $stmt = $conn->prepare("INSERT INTO elections (title, college_id, description, start_date, end_date, course, status) VALUES (?, ?, ?, ?, ?, ?, 'active')");
-        if ($stmt) {
+    if ($title && $start_date && $end_date && $course && $collegeId > 0 && !empty($positions) && count($positions) === count($officerCounts)) {
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("INSERT INTO elections (title, college_id, description, start_date, end_date, course, status) VALUES (?, ?, ?, ?, ?, ?, 'active')");
+            if (!$stmt) throw new Exception("Failed to prepare election insert.");
             $stmt->bind_param("sissss", $title, $collegeId, $description, $start_date, $end_date, $course);
-            if ($stmt->execute()) {
-                $electionId = $stmt->insert_id;
-
-                $positionStmt = $conn->prepare("INSERT INTO election_positions (election_id, position, number_of_officers) VALUES (?, ?, ?)");
-                if ($positionStmt) {
-                    for ($i = 0; $i < count($positions); $i++) {
-                        $pos = trim($positions[$i]);
-                        $count = (int)($officerCounts[$i] ?? 1);
-                        if ($pos !== '' && $count > 0) {
-                            $positionStmt->bind_param("isi", $electionId, $pos, $count);
-                            $positionStmt->execute();
-                        }
-                    }
-                    $positionStmt->close();
-                }
-
-                $success = "✅ Election created successfully!";
-                header("Location: elections.php?election_id=$electionId");
-                exit();
-            } else {
-                $error = "❌ Failed to insert election.";
-            }
+            $stmt->execute();
+            $electionId = $stmt->insert_id;
             $stmt->close();
-        } else {
-            $error = "❌ Statement prepare failed.";
+$positionStmt = $conn->prepare("INSERT INTO election_positions (election_id, position, count) VALUES (?, ?, ?)");
+
+            if (!$positionStmt) throw new Exception("Failed to prepare position insert.");
+            for ($i = 0; $i < count($positions); $i++) {
+                $pos = trim($positions[$i]);
+                $count = (int)($officerCounts[$i] ?? 1);
+                if ($pos !== '' && $count > 0) {
+                    $positionStmt->bind_param("isi", $electionId, $pos, $count);
+                    $positionStmt->execute();
+                }
+            }
+            $positionStmt->close();
+
+            $conn->commit();
+            header("Location: elections.php?election_id=$electionId");
+            exit();
+        } catch (Exception $e) {
+            $conn->rollback();
+            $error = "❌ Error creating election: " . $e->getMessage();
         }
     } else {
-        $error = "❌ All fields are required.";
+        $error = "❌ All fields are required and position data must match.";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endforeach; ?>
       </select>
 
-      <select name="course" id="courseSelect" class="w-full border px-3 py-2 rounded <?= isset($_POST['college_id']) ? '' : 'hidden' ?>" required>
+      <select name="course" id="courseSelect" class="w-full border px-3 py-2 rounded" required>
         <option value="<?= $_POST['course'] ?? '' ?>"><?= $_POST['course'] ?? '-- Select Course --' ?></option>
       </select>
 
@@ -145,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div class="flex justify-between items-center pt-4">
-        <a href="elections.php" class="text-blue-600 hover:underline text-sm">← Back </a>
+        <a href="elections.php" class="text-blue-600 hover:underline text-sm">← Back</a>
         <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded font-semibold">Create Election</button>
       </div>
     </form>
@@ -206,7 +204,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     const collegeId = this.value;
     const courseSelect = document.getElementById('courseSelect');
     courseSelect.innerHTML = '<option value="">Loading...</option>';
-    courseSelect.classList.remove('hidden');
 
     if (collegeId) {
       fetch(`get_courses.php?college_id=${collegeId}`)
@@ -224,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           courseSelect.innerHTML = '<option value="">-- Error loading courses --</option>';
         });
     } else {
-      courseSelect.classList.add('hidden');
+      courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
     }
   });
 </script>
