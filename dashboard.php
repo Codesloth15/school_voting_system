@@ -54,7 +54,7 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
       </div>
     </a>
 
-    <a href="voters.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+    <a href="voter_manager.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
       <div class="flex items-center space-x-5">
         <i data-lucide="user-check" class="w-10 h-10 text-purple-600"></i>
         <div>

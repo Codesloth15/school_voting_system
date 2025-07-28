@@ -72,16 +72,18 @@ $positionStmt = $conn->prepare("INSERT INTO election_positions (election_id, pos
 
 <header class="bg-white border-b shadow fixed top-0 left-0 w-full z-50">
   <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" class="w-8 h-8">
-      <h1 class="text-lg font-bold">Admin Dashboard</h1>
+    <div class="flex items-center space-x-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" class="w-10 h-10" alt="Logo">
+      <h1 class="text-xl font-bold text-blue-900">Admin </h1>
     </div>
-    <div class="flex items-center gap-4">
-      <span>Welcome, <?= htmlspecialchars($adminName) ?></span>
+    <div class="flex items-center space-x-4">
+      <span class="text-gray-700 font-medium">👋 Welcome, Admin</span>
+        <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
       <a href="logout.php" class="text-red-600 hover:underline">Logout</a>
     </div>
   </div>
 </header>
+
 
 <main class="max-w-3xl mx-auto pt-24 px-4 pb-10">
   <div class="bg-white shadow p-8 rounded-xl space-y-6">
