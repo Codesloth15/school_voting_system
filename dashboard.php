@@ -64,7 +64,7 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
       </div>
     </a>
 
-    <a href="results.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
+    <a href="all_election.php" class="block bg-white shadow-lg rounded-2xl p-8 hover:bg-blue-50 transition">
       <div class="flex items-center space-x-5">
         <i data-lucide="bar-chart-3" class="w-10 h-10 text-yellow-600"></i>
         <div>

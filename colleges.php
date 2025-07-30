@@ -44,6 +44,7 @@ $result = $conn->query($sql);
         <a href="index.php" class="hover:text-blue-700 flex items-center"><i data-lucide="home" class="w-4 h-4 mr-1"></i>Home</a>
         <a href="#" class="hover:text-blue-700 flex items-center"><i data-lucide="users" class="w-4 h-4 mr-1"></i>Candidates</a>
         <a href="#" class="hover:text-blue-700 flex items-center"><i data-lucide="help-circle" class="w-4 h-4 mr-1"></i>Help</a>
+           <a href="logout.php" class="text-red-600 hover:underline">Logout</a>
       </nav>
     </div>
   </header>

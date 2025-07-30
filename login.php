@@ -23,9 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $student = $result->fetch_assoc();
 
         // Store all student data in session
-        foreach ($student as $key => $value) {
-            $_SESSION[$key] = $value;
-        }
+$studentId = $_SESSION['student_id'];
 
         // Redirect to colleges.php
         header("Location: colleges.php");

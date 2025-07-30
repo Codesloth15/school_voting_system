@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['votes'])) {
     } else {
         $stmt = $conn->prepare("INSERT INTO votes (election_id, voter_id, student_id, candidate_id, position) VALUES (?, ?, ?, ?, ?)");
         foreach ($votes as $position => $candidate_id) {
-            $stmt->bind_param("iiiss", $election_id, $student_id, $student_id, $candidate_id, $position);
+       $stmt->bind_param("issis", $election_id, $student_id, $student_id, $candidate_id, $position);
+
             $stmt->execute();
         }
         $alertMessage = "Your vote has been submitted successfully.";
