@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['college_id']) && !em
   <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" class="w-10 h-10" alt="Logo">
-      <h1 class="text-xl font-bold text-blue-900">Admin Dashboard</h1>
+      <h1 class="text-xl font-bold text-blue-900">Admin </h1>
     </div>
     <div class="flex items-center space-x-4">
       <span class="text-gray-700 font-medium">👋 Welcome, <?= htmlspecialchars($adminName) ?></span>

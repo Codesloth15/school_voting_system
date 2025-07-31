@@ -1,17 +1,29 @@
 <?php
 session_start();
 
-// Ensure student is logged in
-if (!isset($_SESSION['student_id'])) {
-    header("Location: index.php");
-    exit();
-}
+$studentName =    $_SESSION['student_name'];
 
 // Connect to the database
 $conn = new mysqli("localhost", "root", "", "voting_system");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+// Fetch student's course based on their ID
+$studentId = $_SESSION['student_id'];
+$studentCourse = $_SESSION['student_course'];
+
+$studentSql = "SELECT course FROM students WHERE id = ?";
+$stmt = $conn->prepare($studentSql);
+$stmt->bind_param("i", $studentId);
+$stmt->execute();
+$studentResult = $stmt->get_result();
+
+if ($studentResult->num_rows > 0) {
+    $studentRow = $studentResult->fetch_assoc();
+    $studentCourse = strtoupper(trim($studentRow['course']));
+} 
+$stmt->close();
 
 // Fetch active elections with course field and college name
 $sql = "SELECT elections.*, colleges.name AS college_name 
@@ -34,27 +46,26 @@ $result = $conn->query($sql);
 <body class="bg-gray-100 font-sans">
 
   <!-- Fixed Navbar -->
-  <header class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" alt="School Logo" class="w-10 h-10">
-        <span class="text-xl font-bold text-blue-900">School Voting System</span>
-      </div>
-      <nav class="hidden md:flex space-x-6 text-sm text-gray-700">
-        <a href="index.php" class="hover:text-blue-700 flex items-center"><i data-lucide="home" class="w-4 h-4 mr-1"></i>Home</a>
-        <a href="#" class="hover:text-blue-700 flex items-center"><i data-lucide="users" class="w-4 h-4 mr-1"></i>Candidates</a>
-        <a href="#" class="hover:text-blue-700 flex items-center"><i data-lucide="help-circle" class="w-4 h-4 mr-1"></i>Help</a>
-           <a href="logout.php" class="text-red-600 hover:underline">Logout</a>
-      </nav>
+<header class="bg-white border-b shadow fixed top-0 left-0 w-full z-50">
+  <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" class="w-10 h-10" alt="Logo">
+      <h1 class="text-xl font-bold text-blue-900">School Voting System</h1>
     </div>
-  </header>
+    <div class="flex items-center space-x-4">
+      <span class="text-gray-700 font-medium">👋 Welcome, <?= htmlspecialchars($studentName) ?></span>
+          <a href="colleges.php" class="text-blue-600 hover:underline">Elections</a>
+      <a href="student_logout.php" class="text-red-600 hover:underline">Logout</a>
+    </div>
+  </div>
+</header>
 
   <!-- Active Elections Section -->
   <section class="max-w-6xl mx-auto pt-24 pb-12 px-4">
     <h2 class="text-2xl font-bold text-blue-900 mb-6">Active College Elections</h2>
 
     <div class="grid md:grid-cols-2 gap-6">
-      <?php if ($result->num_rows > 0): ?>
+      <?php if ($result && $result->num_rows > 0): ?>
         <?php while($row = $result->fetch_assoc()): ?>
           <div class="bg-white rounded-xl shadow p-6">
             <h3 class="text-xl font-semibold text-gray-800"><?= htmlspecialchars($row['college_name']) ?></h3>
@@ -66,7 +77,7 @@ $result = $conn->query($sql);
 
             <button 
               class="mt-4 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
-              onclick="checkCourseAndRedirect('<?= $row['course'] ?>', <?= $row['id'] ?>)">
+              onclick="checkCourseAndRedirect('<?= trim(strtoupper($row['course'])) ?>', <?= $row['id'] ?>)">
               Vote Now
             </button>
           </div>
@@ -78,14 +89,20 @@ $result = $conn->query($sql);
   </section>
 
   <script>
-    // Student's course from PHP session
-    const studentCourse = <?= json_encode($_SESSION['course'] ?? '') ?>;
+    const studentCourse = <?= json_encode($studentCourse) ?>;
 
     function checkCourseAndRedirect(electionCourse, electionId) {
-      if (studentCourse === electionCourse) {
+      const allowedCourse = electionCourse.trim().toUpperCase();
+      const userCourse = studentCourse.trim().toUpperCase();
+
+      console.log("Student course:", userCourse);
+      console.log("Election course:", allowedCourse);
+
+      if (userCourse === allowedCourse) {
         window.location.href = 'candidates.php?election_id=' + electionId;
       } else {
-        alert("Only students from the same course are allowed to vote in this election.");
+        
+        alert("Only students from the '" + electionCourse + allowedCourse + "  jjj"+userCourse+"' course can vote in this election.");
       }
     }
 
