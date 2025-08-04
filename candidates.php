@@ -17,15 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['votes'])) {
 
     // Load position limits
     $positionLimits = [];
-    $requiredPositions = [];
     $positionLimitQuery = $conn->prepare("SELECT position, `count` FROM election_positions WHERE election_id = ?");
     $positionLimitQuery->bind_param("i", $election_id);
     $positionLimitQuery->execute();
     $positionLimitResult = $positionLimitQuery->get_result();
     while ($row = $positionLimitResult->fetch_assoc()) {
         $positionLimits[$row['position']] = intval($row['count']);
-        $requiredPositions[] = $row['position'];
     }
+    $positionLimitQuery->close();
 
     // Check if already voted
     $check = $conn->prepare("SELECT COUNT(*) FROM votes WHERE voter_id = ? AND election_id = ?");
@@ -40,21 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['votes'])) {
     } else {
         $valid = true;
 
-        // Enforce voting for all required positions
-        foreach ($requiredPositions as $position) {
-            if (!isset($votes[$position])) {
-                $valid = false;
-                $alertMessage = "You must vote for all required positions.";
-                break;
-            }
-
-            $selected = $votes[$position];
+        // Validate submitted votes only
+        foreach ($votes as $position => $selected) {
             $selectedCount = is_array($selected) ? count($selected) : 1;
-            $maxVotes = $positionLimits[$position];
+            $maxVotes = $positionLimits[$position] ?? 1;
 
-            if ($selectedCount !== $maxVotes) {
+            if ($selectedCount > $maxVotes) {
                 $valid = false;
-                $alertMessage = "You must select exactly $maxVotes candidate(s) for $position.";
+                $alertMessage = "You can select up to $maxVotes candidate(s) for $position.";
                 break;
             }
         }
@@ -164,7 +156,7 @@ $positionLimitQuery->close();
       <div class="mb-10">
         <div class="flex justify-between items-center mb-3">
           <h3 class="text-xl font-semibold text-gray-800"><?= htmlspecialchars($position) ?></h3>
-          <span class="text-sm text-gray-500">Select exactly <?= $limit ?> candidate<?= $limit > 1 ? 's' : '' ?></span>
+          <span class="text-sm text-gray-500">You may select up to <?= $limit ?> candidate<?= $limit > 1 ? 's' : '' ?></span>
         </div>
 
         <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 vote-section" data-position="<?= htmlspecialchars($position) ?>" data-limit="<?= $limit ?>">
@@ -230,21 +222,33 @@ function handleVoteLimit(input) {
     });
   }
 }
-
 function validateVote() {
   const sections = document.querySelectorAll(".vote-section");
+  let anyChecked = false;
+
   for (let section of sections) {
     const position = section.dataset.position;
     const limit = parseInt(section.dataset.limit);
     const checked = section.querySelectorAll("input:checked");
 
-    if (checked.length !== limit) {
-      alert(`You must select exactly ${limit} candidate${limit > 1 ? 's' : ''} for ${position}`);
+    if (checked.length > 0) {
+      anyChecked = true;
+    }
+
+    if (checked.length > limit) {
+      alert(`You can only select up to ${limit} candidate${limit > 1 ? 's' : ''} for ${position}`);
       return false;
     }
   }
+
+  if (!anyChecked) {
+    alert("You must vote for at least one candidate before submitting.");
+    return false;
+  }
+
   return confirm("Are you sure you want to submit your vote?");
 }
+
 
 function showModal(name, motto, platform) {
   document.getElementById('modalName').textContent = name;

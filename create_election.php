@@ -87,7 +87,7 @@ $positionStmt = $conn->prepare("INSERT INTO election_positions (election_id, pos
 
 <main class="max-w-3xl mx-auto pt-24 px-4 pb-10">
   <div class="bg-white shadow p-8 rounded-xl space-y-6">
-    <h2 class="text-2xl font-bold text-gray-800">🗳️ Create New Election</h2>
+    <h2 class="text-2xl font-bold text-gray-800">Create New Election</h2>
 
     <?php if ($success): ?>
       <div class="bg-green-100 text-green-700 border border-green-300 px-4 py-3 rounded-lg"><?= $success ?></div>
@@ -113,8 +113,8 @@ $positionStmt = $conn->prepare("INSERT INTO election_positions (election_id, pos
       </select>
 
       <div class="grid grid-cols-2 gap-4">
-        <input type="date" name="start_date" value="<?= $_POST['start_date'] ?? '' ?>" class="border px-3 py-2 rounded" required>
-        <input type="date" name="end_date" value="<?= $_POST['end_date'] ?? '' ?>" class="border px-3 py-2 rounded" required>
+        <input type="date" name="start_date" value="<?= $_POST['start_date'] ?? '' ?>" class="border px-3 py-2 rounded" >
+        <input type="date" name="end_date" value="<?= $_POST['end_date'] ?? '' ?>" class="border px-3 py-2 rounded" >
       </div>
 
       <!-- Position Section -->

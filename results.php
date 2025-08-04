@@ -119,6 +119,13 @@ foreach ($allStudents as $student_id => $student) {
     <div class="bg-white p-4 shadow rounded">
       <p class="text-gray-600 text-sm">Total Students</p>
       <p class="text-2xl font-bold"><?= $totalStudents ?></p>
+         <br>
+       <div>
+        <button  onclick="openSummaryModal()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+          Result
+        </button>
+      </div>
+  
     </div>
     <div class="bg-white p-4 shadow rounded">
       <p class="text-gray-600 text-sm">Students Who Voted</p>
@@ -215,6 +222,59 @@ foreach ($allStudents as $student_id => $student) {
     <?php endforeach; ?>
   </div>
 </main>
+
+
+<!-- MODAL: Summary of Winners -->
+<div id="summaryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[80vh] overflow-auto p-6 relative">
+    <button onclick="closeSummaryModal()" class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">&times;</button>
+    <h2 class="text-xl font-semibold mb-4">Election Summary: Winners & Total Votes</h2>
+
+    <?php foreach ($candidatesByPosition as $position => $candidates): ?>
+      <?php
+        $winner = '';
+        $highestVotes = -1;
+        $winners = [];
+        $voteResults = [];
+
+        foreach ($candidates as $candidate) {
+          $votes = count($votesByCandidate[$candidate['id']] ?? []);
+          $voteResults[] = ['name' => $candidate['full_name'], 'votes' => $votes];
+
+          if ($votes > $highestVotes) {
+            $highestVotes = $votes;
+            $winners = [$candidate['full_name']];
+          } elseif ($votes === $highestVotes) {
+            $winners[] = $candidate['full_name'];
+          }
+        }
+      ?>
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-blue-800"><?= htmlspecialchars($position) ?></h3>
+        <p><strong>Winner<?= count($winners) > 1 ? 's' : '' ?>:</strong> <?= htmlspecialchars(implode(', ', $winners)) ?></p>
+        <p><strong>Total Votes:</strong> <?= $highestVotes ?></p>
+        <p class="mt-2 font-medium text-gray-700">All Candidates:</p>
+        <ul class="list-disc list-inside text-gray-800">
+          <?php foreach ($voteResults as $result): ?>
+            <li><?= htmlspecialchars($result['name']) ?> — <?= $result['votes'] ?> vote<?= $result['votes'] === 1 ? '' : 's' ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<!-- ADD TO YOUR EXISTING <script> -->
+<script>
+  function openSummaryModal() {
+    document.getElementById("summaryModal").classList.remove("hidden");
+    document.getElementById("summaryModal").classList.add("flex");
+  }
+  function closeSummaryModal() {
+    document.getElementById("summaryModal").classList.remove("flex");
+    document.getElementById("summaryModal").classList.add("hidden");
+  }
+</script>
 
 <!-- MODAL: Not Voted -->
 <div id="notVotedModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">

@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $platform = trim($_POST['platform']);
     $motto = trim($_POST['motto']);
 
-    // File handling
+    // File handling (photo is optional)
     $photoUrl = "";
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $photoTmp = $_FILES['photo']['tmp_name'];
@@ -49,11 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "❌ Failed to upload photo.";
         }
-    } else {
-        $error = "❌ Please upload a photo.";
     }
 
-    if (!$error && $fullName && $course && $year && $photoUrl && $position) {
+    if (!$error && $fullName && $course && $year && $position) {
         $stmt = $conn->prepare("INSERT INTO candidates (election_id, full_name, course, year, photo_url, position, platform, motto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ississss", $electionId, $fullName, $course, $year, $photoUrl, $position, $platform, $motto);
         if ($stmt->execute()) {
@@ -63,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     } elseif (!$error) {
-        $error = "❌ All fields are required.";
+        $error = "❌ All required fields must be filled.";
     }
 }
 ?>
@@ -91,10 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 </header>
 
-
 <main class="max-w-2xl mx-auto pt-24 px-4 pb-10">
   <div class="bg-white shadow p-8 rounded-xl space-y-6">
-    <h2 class="text-2xl font-bold text-gray-800">➕ Add Candidate - <?= htmlspecialchars($election['title']) ?></h2>
+    <h2 class="text-2xl font-bold text-gray-800">Add Candidate - <?= htmlspecialchars($election['title']) ?></h2>
 
     <?php if ($success): ?>
       <div class="bg-green-100 text-green-700 border border-green-300 px-4 py-3 rounded-lg"><?= $success ?></div>
@@ -111,8 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- Limit year to 4 only -->
       <input type="number" name="year" class="w-full border px-3 py-2 rounded" placeholder="Year Level (1-4)" min="1" max="4" required>
 
-      <label class="block text-sm font-medium text-gray-700">Upload Photo</label>
-      <input type="file" name="photo" accept="image/*" class="w-full border px-3 py-2 rounded bg-white" required>
+      <label class="block text-sm font-medium text-gray-700">Upload Photo (optional)</label>
+      <input type="file" name="photo" accept="image/*" class="w-full border px-3 py-2 rounded bg-white">
 
       <select name="position" class="w-full border px-3 py-2 rounded" required>
         <option value="">-- Select Position --</option>

@@ -8,14 +8,28 @@ if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) die("Invalid Election ID.");
 
-// Update election
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_election'])) {
+// Save everything (election + positions)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_all'])) {
     $stmt = $conn->prepare("UPDATE elections SET title=?, description=?, course=?, start_date=?, end_date=?, status=?, college_id=? WHERE id=?");
     $stmt->bind_param("ssssssii", $_POST['title'], $_POST['description'], $_POST['course'], $_POST['start_date'], $_POST['end_date'], $_POST['status'], $_POST['college'], $id);
     $stmt->execute();
     $stmt->close();
 
-    $_SESSION['snackbar'] = 'Election updated successfully!';
+    if (isset($_POST['positions']) && is_array($_POST['positions'])) {
+        $stmt = $conn->prepare("UPDATE election_positions SET position=?, count=? WHERE id=? AND election_id=?");
+        foreach ($_POST['positions'] as $pos) {
+            $posId = (int)($pos['id'] ?? 0);
+            $posName = trim($pos['position'] ?? '');
+            $posCount = (int)($pos['count'] ?? 1);
+            if ($posId > 0 && $posName !== '') {
+                $stmt->bind_param("siii", $posName, $posCount, $posId, $id);
+                $stmt->execute();
+            }
+        }
+        $stmt->close();
+    }
+
+    $_SESSION['snackbar'] = 'Election and positions updated successfully!';
     header("Location: edit_election.php?id=$id");
     exit;
 }
@@ -30,22 +44,6 @@ if (isset($_POST['add_position_modal']) && !empty(trim($_POST['new_position_moda
     $stmt->close();
 
     $_SESSION['snackbar'] = 'Position added successfully!';
-    header("Location: edit_election.php?id=$id");
-    exit;
-}
-
-// Edit position
-if (isset($_POST['edit_position'])) {
-    $positionId = (int)($_POST['position_id'] ?? 0);
-    $positionName = trim($_POST['position_name'] ?? '');
-    $positionCount = (int)($_POST['position_count'] ?? 1);
-    if ($positionId > 0 && $positionName !== '') {
-        $stmt = $conn->prepare("UPDATE election_positions SET position=?, count=? WHERE id=? AND election_id=?");
-        $stmt->bind_param("siii", $positionName, $positionCount, $positionId, $id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['snackbar'] = 'Position updated successfully!';
-    }
     header("Location: edit_election.php?id=$id");
     exit;
 }
@@ -75,7 +73,12 @@ $stmt->close();
 $stmt = $conn->prepare("SELECT * FROM election_positions WHERE election_id=? ORDER BY id ASC");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$positions = $stmt->get_result();
+$positionsResult = $stmt->get_result();
+$positions = [];
+while ($row = $positionsResult->fetch_assoc()) {
+    $positions[] = $row;
+}
+$stmt->close();
 
 // Fetch colleges
 $collegeResult = $conn->query("SELECT id, name FROM colleges ORDER BY name ASC");
@@ -84,7 +87,7 @@ while ($row = $collegeResult->fetch_assoc()) {
     $colleges[] = $row;
 }
 
-// Fetch initial courses if college_id exists
+// Fetch initial courses
 $initialCourses = [];
 if (!empty($election['college_id'])) {
     $stmt = $conn->prepare("SELECT id, name FROM courses WHERE college_id=?");
@@ -119,25 +122,26 @@ if (!empty($election['college_id'])) {
   <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" class="w-10 h-10" alt="Logo">
-      <h1 class="text-xl font-bold text-blue-900">Admin </h1>
+      <h1 class="text-xl font-bold text-blue-900">Admin</h1>
     </div>
     <div class="flex items-center space-x-4">
-      <span class="text-gray-700 font-medium">👋 Welcome, Admin</span>
-        <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
+      <span class="text-gray-700 font-medium">👋 Welcome, <?= htmlspecialchars($adminName) ?></span>
+      <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
       <a href="logout.php" class="text-red-600 hover:underline">Logout</a>
     </div>
   </div>
 </header>
 
-
 <main class="max-w-3xl mx-auto pt-24 px-4 pb-10">
   <div class="bg-white shadow p-8 rounded-xl">
     <h2 class="text-2xl font-bold mb-6">Edit Election</h2>
     <form method="POST" class="space-y-5">
-      <input type="hidden" name="update_election" value="1">
+      <input type="hidden" name="update_all" value="1">
+
+      <!-- Election Fields -->
       <input name="title" value="<?= htmlspecialchars($election['title']) ?>" class="w-full border px-3 py-2 rounded" placeholder="Title" required>
       <textarea name="description" class="w-full border px-3 py-2 rounded" rows="3" placeholder="Description"><?= htmlspecialchars($election['description']) ?></textarea>
-      
+
       <select name="college" id="collegeDropdown" class="w-full border px-3 py-2 rounded" required>
         <option value="">-- Select College --</option>
         <?php foreach ($colleges as $college): ?>
@@ -165,29 +169,29 @@ if (!empty($election['college_id'])) {
         <option value="active" <?= $election['status'] === 'active' ? 'selected' : '' ?>>Active</option>
         <option value="inactive" <?= $election['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
       </select>
-      <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Save Changes</button>
-    </form>
 
-    <!-- Positions -->
-    <div class="mt-10">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold">Positions</h3>
-        <button onclick="document.getElementById('addModal').showModal()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">+ Add Position</button>
+      <!-- Positions Section -->
+      <div class="mt-10">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">Positions</h3>
+          <button type="button" onclick="document.getElementById('addModal').showModal()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">+ Add Position</button>
+        </div>
+
+        <?php foreach ($positions as $index => $pos): ?>
+          <div class="flex items-center gap-2 mb-2">
+            <input type="hidden" name="positions[<?= $index ?>][id]" value="<?= $pos['id'] ?>">
+            <input type="text" name="positions[<?= $index ?>][position]" value="<?= htmlspecialchars($pos['position']) ?>" class="flex-1 border px-3 py-1 rounded" required>
+            <input type="number" name="positions[<?= $index ?>][count]" value="<?= htmlspecialchars($pos['count']) ?>" class="w-20 border px-2 py-1 rounded" min="1" required>
+            <button type="button" onclick="openDeleteModal(<?= $pos['id'] ?>)" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
+          </div>
+        <?php endforeach; ?>
       </div>
 
-      <?php while ($pos = $positions->fetch_assoc()): ?>
-        <form method="POST" class="flex items-center gap-2 mb-2">
-          <input type="hidden" name="position_id" value="<?= $pos['id'] ?>">
-          <input type="text" name="position_name" value="<?= htmlspecialchars($pos['position']) ?>" class="flex-1 border px-3 py-1 rounded" required>
-          <input type="number" name="position_count" value="<?= htmlspecialchars($pos['count']) ?>" class="w-20 border px-2 py-1 rounded" min="1" required>
-          <button type="submit" name="edit_position" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">Save</button>
-          <button type="button" onclick="openDeleteModal(<?= $pos['id'] ?>)" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Delete</button>
-        </form>
-      <?php endwhile; ?>
       <div class="flex justify-between items-center pt-4">
         <a href="elections.php" class="text-blue-600 hover:underline text-sm">← Back</a>
+        <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">Save All Changes</button>
       </div>
-    </div>
+    </form>
   </div>
 </main>
 
@@ -221,7 +225,6 @@ function openDeleteModal(id) {
   deleteModal.showModal();
 }
 
-// Dynamically load courses based on selected college
 document.getElementById('collegeDropdown').addEventListener('change', function () {
   const collegeId = this.value;
   const courseDropdown = document.getElementById('courseDropdown');
