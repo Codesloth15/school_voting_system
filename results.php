@@ -62,11 +62,13 @@ $stmt->close();
 
 // Step 4: Fetch students in that course
 $allStudents = [];
-$studentQuery = $conn->prepare("
+$studentQuery = $conn->prepare(" 
     SELECT id, student_id, first_name, last_name, middle_name, ext, course, year_level 
     FROM students 
     WHERE course = ?
+    ORDER BY last_name ASC
 ");
+
 $studentQuery->bind_param("s", $course);
 $studentQuery->execute();
 $res = $studentQuery->get_result();

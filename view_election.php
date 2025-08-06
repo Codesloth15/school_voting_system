@@ -29,7 +29,7 @@ $stmt = $conn->prepare("
     SELECT c.id, c.full_name, c.photo_url, c.course, c.year, c.position, c.platform, c.motto
     FROM candidates c
     WHERE c.election_id = ?
-    ORDER BY c.position ASC, c.full_name ASC
+  
 ");
 $stmt->bind_param("i", $electionId);
 $stmt->execute();

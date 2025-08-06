@@ -89,7 +89,7 @@ if (!$election) {
 
 // Load candidates
 $candidatesByPosition = [];
-$stmt = $conn->prepare("SELECT * FROM candidates WHERE election_id = ? ORDER BY position, full_name");
+$stmt = $conn->prepare("SELECT * FROM candidates WHERE election_id = ?");
 $stmt->bind_param("i", $election_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -155,7 +155,8 @@ $positionLimitQuery->close();
       ?>
       <div class="mb-10">
         <div class="flex justify-between items-center mb-3">
-          <h3 class="text-xl font-semibold text-gray-800"><?= htmlspecialchars($position) ?></h3>
+          <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($position) ?></h3>
+
           <span class="text-sm text-gray-500">You may select up to <?= $limit ?> candidate<?= $limit > 1 ? 's' : '' ?></span>
         </div>
 
