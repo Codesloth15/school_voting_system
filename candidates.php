@@ -97,8 +97,20 @@ $check->close();
 if ($voteCount > 0) {
     $alreadyVoted = true;
 }
+// Load ordered positions and limits
+$orderedPositions = [];
+$positionLimits = [];
+$positionQuery = $conn->prepare("SELECT position, `count` FROM election_positions WHERE election_id = ? ORDER BY id ASC");
+$positionQuery->bind_param("i", $election_id);
+$positionQuery->execute();
+$positionResult = $positionQuery->get_result();
+while ($row = $positionResult->fetch_assoc()) {
+    $orderedPositions[] = $row['position'];
+    $positionLimits[$row['position']] = intval($row['count']);
+}
+$positionQuery->close();
 
-// Load candidates
+// Load all candidates
 $candidatesByPosition = [];
 $stmt = $conn->prepare("SELECT * FROM candidates WHERE election_id = ?");
 $stmt->bind_param("i", $election_id);
@@ -109,16 +121,6 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Load position limits for frontend
-$positionLimits = [];
-$positionLimitQuery = $conn->prepare("SELECT position, `count` FROM election_positions WHERE election_id = ?");
-$positionLimitQuery->bind_param("i", $election_id);
-$positionLimitQuery->execute();
-$positionLimitResult = $positionLimitQuery->get_result();
-while ($row = $positionLimitResult->fetch_assoc()) {
-    $positionLimits[$row['position']] = intval($row['count']);
-}
-$positionLimitQuery->close();
 ?>
 
 <!DOCTYPE html>
@@ -141,7 +143,7 @@ $positionLimitQuery->close();
 <script>
   setTimeout(() => {
     window.location.href = 'index.php';
-  }, 5000);
+  }, 2000);
 </script>
 <?php endif; ?>
 
@@ -175,9 +177,11 @@ $positionLimitQuery->close();
       <input type="hidden" name="election_id" value="<?= $election_id ?>">
 
       <?php if (!empty($candidatesByPosition)): ?>
-        <?php foreach ($candidatesByPosition as $position => $candidates): 
-          $limit = $positionLimits[$position] ?? 1;
-        ?>
+       <?php foreach ($orderedPositions as $position): ?>
+  <?php 
+    $candidates = $candidatesByPosition[$position] ?? [];
+    $limit = $positionLimits[$position] ?? 1;
+  ?>
         <div class="mb-10">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($position) ?></h3>

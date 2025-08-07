@@ -14,6 +14,7 @@ if ($electionId <= 0) {
     die("❌ Invalid Election ID.");
 }
 
+// ✅ Get Election Title
 $stmt = $conn->prepare("SELECT title FROM elections WHERE id = ?");
 $stmt->bind_param("i", $electionId);
 $stmt->execute();
@@ -24,17 +25,28 @@ if (!$result || $result->num_rows === 0) {
 $election = $result->fetch_assoc();
 $stmt->close();
 
+// ✅ Load ordered positions and limits
+$orderedPositions = [];
+$positionLimits = [];
+$positionDropdown = [];
+
+$positionQuery = $conn->prepare("SELECT position, `count` FROM election_positions WHERE election_id = ? ORDER BY id ASC");
+$positionQuery->bind_param("i", $electionId);
+$positionQuery->execute();
+$positionResult = $positionQuery->get_result();
+while ($row = $positionResult->fetch_assoc()) {
+    $orderedPositions[] = $row['position'];
+    $positionLimits[$row['position']] = intval($row['count']);
+    $positionDropdown[] = $row['position']; // for dropdown
+}
+$positionQuery->close();
+
+// ✅ Load candidates grouped by position
 $candidatesByPosition = [];
-$stmt = $conn->prepare("
-    SELECT c.id, c.full_name, c.photo_url, c.course, c.year, c.position, c.platform, c.motto
-    FROM candidates c
-    WHERE c.election_id = ?
-  
-");
+$stmt = $conn->prepare("SELECT id, full_name, photo_url, course, year, position, platform, motto FROM candidates WHERE election_id = ?");
 $stmt->bind_param("i", $electionId);
 $stmt->execute();
 $result = $stmt->get_result();
-
 while ($row = $result->fetch_assoc()) {
     $candidatesByPosition[$row['position']][] = $row;
 }
@@ -72,7 +84,11 @@ $stmt->close();
     </a>
   </div>
 
-  <?php foreach ($candidatesByPosition as $position => $candidates): ?>
+  <?php foreach ($orderedPositions as $position): ?>
+    <?php 
+      $candidates = $candidatesByPosition[$position] ?? [];
+      $limit = $positionLimits[$position] ?? 1;
+    ?>
     <div class="mb-10">
       <h3 class="text-xl font-semibold text-gray-800 mb-3"><?= htmlspecialchars($position) ?></h3>
       <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
@@ -128,7 +144,12 @@ $stmt->close();
 
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">Position</label>
-        <input type="text" name="position" id="editPosition" class="w-full border px-3 py-2 mt-1">
+        <select name="position" id="editPosition" class="w-full border px-3 py-2 mt-1">
+          <option value="">-- Select Position --</option>
+          <?php foreach ($positionDropdown as $pos): ?>
+            <option value="<?= htmlspecialchars($pos) ?>"><?= htmlspecialchars($pos) ?></option>
+          <?php endforeach; ?>
+        </select>
       </div>
 
       <div class="mb-4">
