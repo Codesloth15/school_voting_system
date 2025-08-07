@@ -103,6 +103,7 @@ $result = $conn->query($query);
           <form action="results.php" method="POST">
             <input type="hidden" name="course" value="<?= $row['course'] ?>">
              <input type="hidden" name="election_id" value="<?= $row['id'] ?>">
+              <input type="hidden" name="title" value="<?= $row['title'] ?>">
             <button type="submit" class="inline-flex items-center text-sm text-blue-700 hover:underline font-medium">
               <i data-lucide="eye" class="w-4 h-4 mr-1"></i> View
             </button>

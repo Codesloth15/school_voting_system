@@ -1,5 +1,5 @@
 <?php
-require('fpdf/fpdf.php'); // Make sure path is correct
+require('./fpdf182/fpdf.php'); // Make sure path is correct
 session_start();
 
 $conn = new mysqli("localhost", "root", "", "voting_system");
@@ -10,16 +10,24 @@ if ($conn->connect_error) {
 $electionId = isset($_GET['election_id']) ? (int)$_GET['election_id'] : 0;
 if ($electionId <= 0) die("Invalid election ID.");
 
-// Get course
+
+// Step 1: Get course and title for this election
 $course = "";
-$courseQuery = $conn->prepare("SELECT course FROM elections WHERE id = ?");
+$title = "";
+$courseQuery = $conn->prepare("SELECT course, title FROM elections WHERE id = ?");
 $courseQuery->bind_param("i", $electionId);
 $courseQuery->execute();
 $courseResult = $courseQuery->get_result();
+
 if ($courseResult->num_rows === 0) die("Election not found.");
+
 $row = $courseResult->fetch_assoc();
 $course = $row['course'];
+$title = $row['title'];
+
 $courseQuery->close();
+
+if (empty($course)) die("Election does not have a course assigned.");
 
 // Get candidates
 $candidatesByPosition = [];
@@ -54,7 +62,7 @@ $stmt->close();
 $pdf = new FPDF();
 $pdf->AddPage();
 $pdf->SetFont('Arial', 'B', 16);
-$pdf->Cell(0, 10, "Election Results - Election ID #$electionId", 0, 1, 'C');
+$pdf->Cell(0, 10, "Results for - $title", 0, 1, 'C');
 $pdf->SetFont('Arial', '', 12);
 $pdf->Cell(0, 8, "Course: $course", 0, 1);
 

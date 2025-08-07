@@ -10,17 +10,29 @@ if ($conn->connect_error) {
 $electionId = isset($_POST['election_id']) ? (int)$_POST['election_id'] : 0;
 if ($electionId <= 0) die("Invalid election ID.");
 
-// Step 1: Get course for this election
+$electionId = isset($_POST['election_id']) ? (int)$_POST['election_id'] : 0;
+if ($electionId <= 0) die("Invalid election ID.");
+
+// Step 1: Get course and title for this election
 $course = "";
-$courseQuery = $conn->prepare("SELECT course FROM elections WHERE id = ?");
+$title = "";
+$courseQuery = $conn->prepare("SELECT course, title FROM elections WHERE id = ?");
 $courseQuery->bind_param("i", $electionId);
 $courseQuery->execute();
 $courseResult = $courseQuery->get_result();
+
 if ($courseResult->num_rows === 0) die("Election not found.");
+
 $row = $courseResult->fetch_assoc();
 $course = $row['course'];
+$title = $row['title'];
+
 $courseQuery->close();
+
 if (empty($course)) die("Election does not have a course assigned.");
+
+// Optional: you can now use $title anywhere below
+// echo "Course: $course, Title: $title";
 
 // Step 2: Fetch candidates
 $candidatesByPosition = [];
@@ -115,7 +127,7 @@ foreach ($allStudents as $student_id => $student) {
 </header>
 
 <main class="max-w-6xl mx-auto pt-24 pb-10 px-4">
-  <h2 class="text-2xl font-bold mb-6 text-gray-800">Election #<?= $electionId ?> Results</h2>
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Election: <?= $title?> Results</h2>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
     <div class="bg-white p-4 shadow rounded">
@@ -263,12 +275,13 @@ foreach ($allStudents as $student_id => $student) {
         </ul>
       </div>
     <?php endforeach; ?>
-  </div>
-  <a href="generate_result.php?election_id=<?= $electionId ?>" target="_blank">
+      <a href="generate_result.php?election_id=<?= $electionId ?>" target="_blank">
   <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
     Download PDF of Winners
   </button>
 </a>
+  </div>
+
 
 </div>
 
