@@ -262,6 +262,12 @@ foreach ($allStudents as $student_id => $student) {
       </div>
     <?php endforeach; ?>
   </div>
+  <a href="generate_result.php?election_id=<?= $electionId ?>" target="_blank">
+  <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+    Download PDF of Winners
+  </button>
+</a>
+
 </div>
 
 <!-- ADD TO YOUR EXISTING <script> -->
