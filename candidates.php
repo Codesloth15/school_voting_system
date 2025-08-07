@@ -26,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['votes'])) {
     }
     $positionLimitQuery->close();
 
-    // Check if already voted
-    $check = $conn->prepare("SELECT COUNT(*) FROM votes WHERE voter_id = ? AND election_id = ?");
-    $check->bind_param("ii", $student_id, $election_id);
+    // ✅ Corrected vote check using student_id
+    $check = $conn->prepare("SELECT COUNT(*) FROM votes WHERE student_id = ? AND election_id = ?");
+    $check->bind_param("si", $student_id, $election_id);
     $check->execute();
     $check->bind_result($voteCount);
     $check->fetch();
@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['votes'])) {
     } else {
         $valid = true;
 
-        // Validate submitted votes only
         foreach ($votes as $position => $selected) {
             $selectedCount = is_array($selected) ? count($selected) : 1;
             $maxVotes = $positionLimits[$position] ?? 1;
@@ -75,7 +74,6 @@ if (!isset($_GET['election_id'])) {
 $election_id = intval($_GET['election_id']);
 
 // Load election info
-$election = null;
 $electionQuery = $conn->prepare("SELECT title FROM elections WHERE id = ?");
 $electionQuery->bind_param("i", $election_id);
 $electionQuery->execute();
@@ -85,6 +83,19 @@ $electionQuery->close();
 
 if (!$election) {
     die("Election not found.");
+}
+
+// ✅ Corrected GET vote check
+$alreadyVoted = false;
+$check = $conn->prepare("SELECT COUNT(*) FROM votes WHERE student_id = ? AND election_id = ?");
+$check->bind_param("si", $student_id, $election_id);
+$check->execute();
+$check->bind_result($voteCount);
+$check->fetch();
+$check->close();
+
+if ($voteCount > 0) {
+    $alreadyVoted = true;
 }
 
 // Load candidates
@@ -98,7 +109,7 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Load position limits again for frontend
+// Load position limits for frontend
 $positionLimits = [];
 $positionLimitQuery = $conn->prepare("SELECT position, `count` FROM election_positions WHERE election_id = ?");
 $positionLimitQuery->bind_param("i", $election_id);
@@ -121,11 +132,19 @@ $positionLimitQuery->close();
 <body class="bg-gray-100 font-sans">
 
 <?php if (!empty($alertMessage)): ?>
+<div id="voteSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-xl p-6 shadow-lg text-center max-w-sm w-full">
+    <h2 class="text-xl font-bold text-green-700 mb-2">🎉 <?= htmlspecialchars($alertMessage) ?></h2>
+    <p class="text-gray-600">Redirecting to homepage in second...</p>
+  </div>
+</div>
 <script>
-  alert("<?= $alertMessage ?>");
-  <?php if ($redirect): ?> window.location.href = 'index.php'; <?php endif; ?>
+  setTimeout(() => {
+    window.location.href = 'index.php';
+  }, 1000);
 </script>
 <?php endif; ?>
+
 
 <header class="bg-white border-b shadow fixed top-0 left-0 w-full z-50">
   <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
@@ -146,55 +165,74 @@ $positionLimitQuery->close();
     Candidates for: <?= htmlspecialchars($election['title'] ?? 'Unknown Election') ?>
   </h2>
 
-  <form method="POST" onsubmit="return validateVote();">
-    <input type="hidden" name="election_id" value="<?= $election_id ?>">
-
-    <?php if (!empty($candidatesByPosition)): ?>
-      <?php foreach ($candidatesByPosition as $position => $candidates): 
-        $limit = $positionLimits[$position] ?? 1;
-      ?>
-      <div class="mb-10">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($position) ?></h3>
-
-          <span class="text-sm text-gray-500">You may select up to <?= $limit ?> candidate<?= $limit > 1 ? 's' : '' ?></span>
-        </div>
-
-        <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 vote-section" data-position="<?= htmlspecialchars($position) ?>" data-limit="<?= $limit ?>">
-          <?php foreach ($candidates as $candidate): ?>
-          <label class="bg-white border rounded-2xl shadow p-4 hover:shadow-lg cursor-pointer relative">
-            <input 
-              type="<?= $limit > 1 ? 'checkbox' : 'radio' ?>"
-              name="votes[<?= htmlspecialchars($position) ?>]<?= $limit > 1 ? '[]' : '' ?>"
-              value="<?= $candidate['id'] ?>"
-              class="hidden peer"
-              onchange="handleVoteLimit(this)"
-            >
-            <div class="flex flex-col items-center peer-checked:border-blue-700 peer-checked:ring-2 peer-checked:ring-blue-500 p-2 rounded-xl">
-              <img src="<?= htmlspecialchars($candidate['photo_url']) ?>" onerror="this.src='default.png';"
-                   class="w-24 h-24 object-cover rounded-full border mb-2">
-              <h4 class="text-lg font-semibold text-center text-gray-800"><?= htmlspecialchars($candidate['full_name']) ?></h4>
-              <p class="text-sm text-gray-600 text-center"><?= htmlspecialchars($candidate['course']) ?> | Year <?= $candidate['year'] ?></p>
-              <button type="button"
-                      onclick="showModal('<?= addslashes($candidate['full_name']) ?>', '<?= addslashes($candidate['motto']) ?>', '<?= addslashes($candidate['platform']) ?>')"
-                      class="text-sm text-blue-600 hover:underline mt-1">View Info</button>
-            </div>
-          </label>
-          <?php endforeach; ?>
-        </div>
-      </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <p class="text-red-500">No candidates found for this election.</p>
-    <?php endif; ?>
-
-    <div class="text-center mt-10">
-      <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl text-lg shadow">
-        Submit My Vote
-      </button>
+  <?php if ($alreadyVoted): ?>
+    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6">
+      <p>You have already voted in this election. Thank you!</p>
     </div>
-  </form>
+  <?php else: ?>
+<form method="POST" id="voteForm" onsubmit="return prepareVoteSummary(event);">
+
+      <input type="hidden" name="election_id" value="<?= $election_id ?>">
+
+      <?php if (!empty($candidatesByPosition)): ?>
+        <?php foreach ($candidatesByPosition as $position => $candidates): 
+          $limit = $positionLimits[$position] ?? 1;
+        ?>
+        <div class="mb-10">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($position) ?></h3>
+            <span class="text-sm text-gray-500">You may select up to <?= $limit ?> candidate<?= $limit > 1 ? 's' : '' ?></span>
+          </div>
+
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 vote-section" data-position="<?= htmlspecialchars($position) ?>" data-limit="<?= $limit ?>">
+            <?php foreach ($candidates as $candidate): ?>
+            <label class="bg-white border rounded-2xl shadow p-4 hover:shadow-lg cursor-pointer relative">
+              <input 
+                type="<?= $limit > 1 ? 'checkbox' : 'radio' ?>"
+                name="votes[<?= htmlspecialchars($position) ?>]<?= $limit > 1 ? '[]' : '' ?>"
+                value="<?= $candidate['id'] ?>"
+                class="hidden peer"
+                onchange="handleVoteLimit(this)"
+              >
+              <div class="flex flex-col items-center peer-checked:border-blue-700 peer-checked:ring-2 peer-checked:ring-blue-500 p-2 rounded-xl">
+                <img src="<?= htmlspecialchars($candidate['photo_url']) ?>" onerror="this.src='default.png';"
+                     class="w-24 h-24 object-cover rounded-full border mb-2">
+                <h4 class="text-lg font-semibold text-center text-gray-800"><?= htmlspecialchars($candidate['full_name']) ?></h4>
+                <p class="text-sm text-gray-600 text-center"><?= htmlspecialchars($candidate['course']) ?> | Year <?= $candidate['year'] ?></p>
+                <button type="button"
+                        onclick="showModal('<?= addslashes($candidate['full_name']) ?>', '<?= addslashes($candidate['motto']) ?>', '<?= addslashes($candidate['platform']) ?>')"
+                        class="text-sm text-blue-600 hover:underline mt-1">View Info</button>
+              </div>
+            </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p class="text-red-500">No candidates found for this election.</p>
+      <?php endif; ?>
+
+      <div class="text-center mt-10">
+        <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl text-lg shadow">
+          Submit My Vote
+        </button>
+      </div>
+    </form>
+  <?php endif; ?>
 </section>
+<!-- Vote Confirmation Modal -->
+<div id="confirmVoteModalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+<div id="confirmVoteModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 p-6 relative">
+    <button onclick="closeConfirmModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">✕</button>
+    <h2 class="text-xl font-bold text-blue-900 mb-4">🗳️ Confirm Your Vote</h2>
+    <div id="voteSummary" class="text-sm text-gray-700 whitespace-pre-wrap mb-6"></div>
+    <div class="flex justify-end space-x-3">
+      <button type="button" onclick="closeConfirmModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-xl">Cancel</button>
+      <button type="button" onclick="submitVote()" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-xl">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal -->
 <div id="infoModalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
@@ -249,7 +287,60 @@ function validateVote() {
 
   return confirm("Are you sure you want to submit your vote?");
 }
+function prepareVoteSummary(event) {
+  event.preventDefault();
 
+  const sections = document.querySelectorAll(".vote-section");
+  let anyChecked = false;
+  let summary = "";
+
+  for (let section of sections) {
+    const position = section.dataset.position;
+    const limit = parseInt(section.dataset.limit);
+    const selectedInputs = section.querySelectorAll("input:checked");
+
+    if (selectedInputs.length > 0) {
+      anyChecked = true;
+      summary += `🔹 ${position}:\n`;
+
+      selectedInputs.forEach(input => {
+        const label = input.closest("label");
+        const nameEl = label.querySelector("h4");
+        if (nameEl) {
+          summary += `   - ${nameEl.textContent.trim()}\n`;
+        }
+      });
+      summary += "\n";
+    }
+
+    if (selectedInputs.length > limit) {
+      alert(`You can only select up to ${limit} candidate${limit > 1 ? 's' : ''} for ${position}`);
+      return false;
+    }
+  }
+
+  if (!anyChecked) {
+    alert("You must vote for at least one candidate before submitting.");
+    return false;
+  }
+
+  // Show modal
+  document.getElementById("voteSummary").textContent = summary;
+  document.getElementById("confirmVoteModal").classList.remove("hidden");
+  document.getElementById("confirmVoteModalBackdrop").classList.remove("hidden");
+
+  return false;
+}
+
+function closeConfirmModal() {
+  document.getElementById("confirmVoteModal").classList.add("hidden");
+  document.getElementById("confirmVoteModalBackdrop").classList.add("hidden");
+}
+
+function submitVote() {
+  closeConfirmModal();
+  document.getElementById("voteForm").submit();
+}
 
 function showModal(name, motto, platform) {
   document.getElementById('modalName').textContent = name;

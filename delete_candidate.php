@@ -1,12 +1,6 @@
 <?php
 session_start();
 
-// 🔐 Optional: You can protect this file by checking if admin is logged in
-if (!isset($_SESSION['admin_name'])) {
-    header("Location: login.php");
-    exit();
-}
-
 $conn = new mysqli("localhost", "root", "", "voting_system");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

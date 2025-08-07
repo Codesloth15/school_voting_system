@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 07, 2025 at 06:10 AM
+-- Generation Time: Aug 07, 2025 at 07:34 AM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -92,8 +92,7 @@ INSERT INTO `candidates` (`id`, `election_id`, `full_name`, `position`, `photo_u
 (136, 27, 'Ulod, Patrick Sib-at Patrick', 'Fourth Year Representative', 'uploads/1754445356_user.png', 'BSIT', '4', 'sd', NULL, 'sd', NULL, '2025-08-06 01:55:56'),
 (137, 27, 'Wanawan, Ilyne Joy Antonio', 'Third Year Representative', 'uploads/1754445370_user.png', 'BSIT', '3', 'as', NULL, 'as', NULL, '2025-08-06 01:56:10'),
 (138, 27, 'Wanawan, Ilyne Joy Antonio', 'Third Year Representative', 'uploads/1754445384_user.png', 'BSIT', '3', 'as', NULL, 'as', NULL, '2025-08-06 01:56:24'),
-(139, 27, 'Valdez, Jake Julakit', 'Fourth Year Representative', 'uploads/1754445674_user.png', 'BSIT', '4', 'sd', NULL, 'sd', NULL, '2025-08-06 02:01:14'),
-(140, 27, 'Mark Joby Aguilar', 'Business Manager', '', 'BSIT', '3', '', NULL, '', NULL, '2025-08-06 02:18:29');
+(139, 27, 'Valdez, Jake Julakit', 'Fourth Year Representative', 'uploads/1754445674_user.png', 'BSIT', '4', 'sd', NULL, 'sd', NULL, '2025-08-06 02:01:14');
 
 -- --------------------------------------------------------
 
@@ -696,7 +695,47 @@ INSERT INTO `votes` (`vote_id`, `student_id`, `election_id`, `voter_id`, `candid
 (90, '23-110180', 27, 23, 127, '2025-08-06 02:21:55', 'Sentinel'),
 (91, '23-110180', 27, 23, 131, '2025-08-06 02:21:55', 'Second Year Rep'),
 (92, '23-110180', 27, 23, 137, '2025-08-06 02:21:55', 'Third Year Representative'),
-(93, '23-110180', 27, 23, 139, '2025-08-06 02:21:55', 'Fourth Year Representative');
+(93, '23-110180', 27, 23, 139, '2025-08-06 02:21:55', 'Fourth Year Representative'),
+(94, '21-11829', 27, 21, 68, '2025-08-07 05:06:50', 'President'),
+(95, '25-115764', 27, 25, 68, '2025-08-07 05:10:47', 'President'),
+(96, '25-115864', 27, 25, 68, '2025-08-07 05:11:26', 'President'),
+(97, '25-115864', 27, 25, 116, '2025-08-07 05:11:26', 'Vice President'),
+(98, '25-115864', 27, 25, 122, '2025-08-07 05:11:26', 'Treasurer'),
+(99, '25-115864', 27, 25, 124, '2025-08-07 05:11:26', 'Business Manager'),
+(100, '25-115864', 27, 25, 129, '2025-08-07 05:11:26', 'First Year Rep'),
+(101, '25-115864', 27, 25, 131, '2025-08-07 05:11:26', 'Second Year Rep'),
+(102, '25-115864', 27, 25, 138, '2025-08-07 05:11:26', 'Third Year Representative'),
+(103, '24-111861', 27, 24, 68, '2025-08-07 05:24:22', 'President'),
+(104, '24-111861', 27, 24, 116, '2025-08-07 05:24:22', 'Vice President'),
+(105, '24-111861', 27, 24, 129, '2025-08-07 05:24:22', 'First Year Rep'),
+(106, '24-111861', 27, 24, 134, '2025-08-07 05:24:22', 'Third Year Representative'),
+(107, '24-111861', 27, 24, 139, '2025-08-07 05:24:22', 'Fourth Year Representative'),
+(108, '23-19454', 27, 23, 68, '2025-08-07 05:27:22', 'President'),
+(109, '23-19454', 27, 23, 117, '2025-08-07 05:27:22', 'Vice President'),
+(110, '23-19454', 27, 23, 121, '2025-08-07 05:27:22', 'Auditor'),
+(111, '23-19454', 27, 23, 137, '2025-08-07 05:27:22', 'Third Year Representative'),
+(112, '23-19454', 27, 23, 139, '2025-08-07 05:27:22', 'Fourth Year Representative'),
+(113, '23-19399', 27, 23, 68, '2025-08-07 05:30:36', 'President'),
+(114, '23-19399', 27, 23, 116, '2025-08-07 05:30:37', 'Vice President'),
+(115, '23-19399', 27, 23, 120, '2025-08-07 05:30:37', 'Auditor'),
+(116, '23-19399', 27, 23, 122, '2025-08-07 05:30:37', 'Treasurer'),
+(117, '23-19399', 27, 23, 124, '2025-08-07 05:30:37', 'Business Manager'),
+(118, '23-19399', 27, 23, 125, '2025-08-07 05:30:37', 'Business Manager'),
+(119, '23-19399', 27, 23, 126, '2025-08-07 05:30:37', 'Sentinel'),
+(120, '23-19399', 27, 23, 128, '2025-08-07 05:30:37', 'First Year Rep'),
+(121, '23-19399', 27, 23, 134, '2025-08-07 05:30:37', 'Third Year Representative'),
+(122, '23-19399', 27, 23, 139, '2025-08-07 05:30:37', 'Fourth Year Representative'),
+(123, '25-116706', 27, 25, 69, '2025-08-07 05:32:04', 'President'),
+(124, '25-116706', 27, 25, 116, '2025-08-07 05:32:04', 'Vice President'),
+(125, '25-116706', 27, 25, 71, '2025-08-07 05:32:04', 'Auditor'),
+(126, '25-116706', 27, 25, 123, '2025-08-07 05:32:04', 'Treasurer'),
+(127, '25-116706', 27, 25, 124, '2025-08-07 05:32:04', 'Business Manager'),
+(128, '25-116706', 27, 25, 125, '2025-08-07 05:32:04', 'Business Manager'),
+(129, '25-116706', 27, 25, 127, '2025-08-07 05:32:04', 'Sentinel'),
+(130, '25-116706', 27, 25, 128, '2025-08-07 05:32:04', 'First Year Rep'),
+(131, '25-116706', 27, 25, 131, '2025-08-07 05:32:04', 'Second Year Rep'),
+(132, '25-116706', 27, 25, 134, '2025-08-07 05:32:04', 'Third Year Representative'),
+(133, '25-116706', 27, 25, 139, '2025-08-07 05:32:04', 'Fourth Year Representative');
 
 --
 -- Indexes for dumped tables
@@ -801,7 +840,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `votes`
 --
 ALTER TABLE `votes`
-  MODIFY `vote_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
+  MODIFY `vote_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
 
 --
 -- Constraints for dumped tables
