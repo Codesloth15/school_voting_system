@@ -134,14 +134,14 @@ $positionLimitQuery->close();
 <?php if (!empty($alertMessage)): ?>
 <div id="voteSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
   <div class="bg-white rounded-xl p-6 shadow-lg text-center max-w-sm w-full">
-    <h2 class="text-xl font-bold text-green-700 mb-2">🎉 <?= htmlspecialchars($alertMessage) ?></h2>
+    <h2 class="text-xl font-bold text-green-700 mb-2"><?= htmlspecialchars($alertMessage) ?></h2>
     <p class="text-gray-600">Redirecting to homepage in second...</p>
   </div>
 </div>
 <script>
   setTimeout(() => {
     window.location.href = 'index.php';
-  }, 1000);
+  }, 5000);
 </script>
 <?php endif; ?>
 
@@ -225,7 +225,7 @@ $positionLimitQuery->close();
 <div id="confirmVoteModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
   <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 p-6 relative">
     <button onclick="closeConfirmModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">✕</button>
-    <h2 class="text-xl font-bold text-blue-900 mb-4">🗳️ Confirm Your Vote</h2>
+    <h2 class="text-xl font-bold text-blue-900 mb-4">Confirm Your Vote</h2>
     <div id="voteSummary" class="text-sm text-gray-700 whitespace-pre-wrap mb-6"></div>
     <div class="flex justify-end space-x-3">
       <button type="button" onclick="closeConfirmModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-xl">Cancel</button>
