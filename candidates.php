@@ -205,7 +205,7 @@ $stmt->close();
                 <p class="text-sm text-gray-600 text-center"><?= htmlspecialchars($candidate['course']) ?> | Year <?= $candidate['year'] ?></p>
                 <button type="button"
                         onclick="showModal('<?= addslashes($candidate['full_name']) ?>', '<?= addslashes($candidate['motto']) ?>', '<?= addslashes($candidate['platform']) ?>')"
-                        class="text-sm text-blue-600 hover:underline mt-1">View Info</button>
+                        class="text-sm text-blue-600 hover:underline mt-1">More</button>
               </div>
             </label>
             <?php endforeach; ?>
